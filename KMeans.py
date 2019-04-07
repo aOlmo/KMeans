@@ -1,4 +1,5 @@
 import numpy as np
+import pprint
 import pandas as pd
 import tensorflow as tf
 
@@ -14,8 +15,8 @@ cols = X.shape[1]
 # that we can obtain for each column is 10
 max_val = int(np.amax(X, axis=0)[0])+1
 
-n = 10
-k = 4
+n = 1000
+k = 10
 X = X[:n]
 
 class KMeans:
@@ -68,11 +69,10 @@ class KMeans:
 
         return l_cluster, l_cluster_sz
 
+    #TODO: Do a shuffle here
     def get_half_of_largest_cluster(self):
         l_c, l_c_sz = self.find_largest_cluster()
-        # Get the middlepoint
         mid = int(l_c_sz/2)
-        #TODO: Do a shuffle here
         ret_array = np.copy(self.c_dict[l_c][:mid])
         self.c_dict[l_c] = np.delete(self.c_dict[l_c], range(mid), axis=0)
         return ret_array
@@ -96,13 +96,12 @@ class KMeans:
             # Move half of the points of the largest cluster to this
             self.c_dict[empty_cluster] = self.get_half_of_largest_cluster()
             # And recalculate centroids
-            self.recalculate_centroids()
+            return self.recalculate_centroids()
 
-        print(new_centroids)
+        if (empty_cluster == -1):
+            return np.array(new_centroids)
 
-        return np.array(new_centroids)
 
-    #TODO: Calculate potential function. Why does not get smaller?
     def calc_potential_function(self, sess):
         self.potential_function = 0
         for i, X_aux in enumerate(self.c_dict.values()):
@@ -127,13 +126,15 @@ class KMeans:
                 self.centroids = self.recalculate_centroids()
 
                 # Converges when centroids from one iteration to the next do not vary
-                converged = np.allclose(prev_centroids, self.centroids, equal_nan=True, rtol=0.00001)
+                converged = np.allclose(prev_centroids, self.centroids)
 
-                if ((count % 100 == 0) or converged):
+                if ((count % 1 == 0) or converged):
+                    c_str = ""
+                    if (converged):
+                        c_str = " Converged at "
                     self.calc_potential_function(sess)
-                    print("[+] Epoch: {}, Loss: {}".format(count, self.potential_function))
+                    print("[+] {} Epoch: {}, Loss: {}".format(c_str, count, self.potential_function))
 
-            print("[+]: CONVERGED")
 
     def get_potential_function(self):
         return self.potential_function
