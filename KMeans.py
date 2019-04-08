@@ -124,12 +124,12 @@ class KMeans:
                 # Converges when centroids from one iteration to the next do not vary
                 converged = np.allclose(prev_centroids, self.centroids)
 
-                if ((count % 1 == 0) or converged):
+                if ((count % 100 == 0) or converged):
                     c_str = ""
                     if (converged):
                         c_str = " Converged at "
                     self.calc_potential_function(sess)
-                    print("[+] {} Epoch: {}, Loss: {}".format(c_str, count, self.potential_function))
+                    print("[+] K: {} -{}Epoch: {}, Loss: {}".format(self.k, c_str, count, self.potential_function))
 
 
     def get_potential_function(self):
@@ -140,9 +140,8 @@ class KMeans:
 
 
 
-def test_with_blobs(k, n_samples):
+def test_with_blobs(k, X, y):
     # Generate 2d classification dataset
-    X, y = make_blobs(n_samples=n_samples, centers=k, n_features=2)
 
     km = KMeans(k, X)
     km.train()
@@ -160,22 +159,47 @@ def test_with_blobs(k, n_samples):
         plt.plot([c_x], [c_y], 'kx', markersize=5)
     plt.show()
 
-if __name__ == '__main__':
-    n = 1000
-    k = 14
 
+def exercise_4_3():
+    p_funcs = []
+    Ks = [2, 3, 4, 5, 6, 7, 8]
+    for k in Ks:
+        km = KMeans(k, X)
+        km.train()
+        p_funcs.append(km.get_potential_function())
+
+    plt.title("Potential function vs K")
+    plt.plot(p_funcs, Ks, 'bo-')
+    plt.legend(loc='lower right')
+    plt.show()
+
+
+def exercise_4_2():
+    k = 2
+    X = np.array([[3,3], [7,9], [9,7], [5,3]])
+    y = np.array([0, 1, 1, 0])
+    test_with_blobs(k, X, y)
+
+
+def blob_test():
+    k = 2
+    n_samples = 200
+    X, y = make_blobs(n_samples=n_samples, centers=k, n_features=2)
+    test_with_blobs(k, X, y)
+
+
+if __name__ == '__main__':
     X = pd.read_csv("breast-cancer-wisconsin.data").iloc[:, 1:-1].values
     X[X == '?'] = 0
     X = X.astype(float)
-    X = X[:n]
 
-    km = KMeans(k, X)
-    km.train()
+    # Exercise 4.3
+    exercise_4_3()
 
-    # d, c = km.get_dict_and_centroids()
+    # Exercise 4.2
+    exercise_4_2()
 
-    k = 4
-    n_samples = 200
-    test_with_blobs(k, n_samples)
+    # More testing
+    blob_test()
 
 
